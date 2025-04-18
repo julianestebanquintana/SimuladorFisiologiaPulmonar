@@ -21,12 +21,13 @@ def simular():
     R = float(data['R'])
     C = float(data['C'])
     amp = float(data['amp'])
-    dur_freq = float(data['dur_freq'])
+    dur_freq = float(data['dur_freq'])  # será usado como frecuencia si entrada == seno
 
     t_final = 2
     V0 = 0
     t_eval = np.linspace(0, t_final, 500)
 
+    # Entradas
     def escalon(t): return amp
     def pulso(t): return amp if 0 <= t < dur_freq else 0
     def seno(t): return amp * np.sin(2 * np.pi * dur_freq * t)
@@ -36,6 +37,8 @@ def simular():
     elif entrada == 'pulso':
         P = pulso
     elif entrada == 'seno':
+        if dur_freq < 0.5:
+            dur_freq = 3  # corrección automática si es demasiado baja
         P = seno
     else:
         return "Tipo de entrada no válido", 400
