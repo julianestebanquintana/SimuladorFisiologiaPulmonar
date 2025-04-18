@@ -2,7 +2,9 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import numpy as np
 from scipy.integrate import solve_ivp
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')  # <-- Forzar backend no interactivo
 import io
 
 app = Flask(__name__)
