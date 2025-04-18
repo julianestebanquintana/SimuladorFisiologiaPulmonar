@@ -1,15 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset='UTF-8'>
+    <meta charset="UTF-8">
     <title>Simulador de Fisiología Pulmonar</title>
-    <link rel='stylesheet' href='/static/css/style.css'>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <h1>Simulador de Fisiología Pulmonar</h1>
-    <div id='simulator'>
-        <!-- Aquí irá la interfaz -->
-    </div>
-    <script src='/static/js/script.js'></script>
+
+    <form id="simulador-form">
+        <label>Modelo:
+            <select id="modelo">
+                <option value="1c">Un compartimiento</option>
+                <option value="2c">Dos compartimientos</option>
+            </select>
+        </label><br><br>
+
+        <label>Tipo de entrada:
+            <select id="entrada">
+                <option value="escalon">Escalón</option>
+                <option value="pulso">Pulso</option>
+                <option value="seno">Senoidal</option>
+            </select>
+        </label><br><br>
+
+        <label>Resistencia (R): <input type="number" id="R" value="15" step="0.1"></label><br>
+        <label>Compliance (C): <input type="number" id="C" value="0.00125" step="0.00001"></label><br>
+        <label>Amplitud presión (P0 o A): <input type="number" id="amp" value="500"></label><br>
+        <label>Duración o frecuencia: <input type="number" id="dur_freq" value="0.25"></label><br><br>
+
+        <button type="submit">Simular</button>
+    </form>
+
+    <h2>Resultado</h2>
+    <img id="grafica" src="" alt="Gráfica del volumen" style="max-width: 600px;">
+
+    <script src="/static/js/script.js"></script>
 </body>
 </html>
