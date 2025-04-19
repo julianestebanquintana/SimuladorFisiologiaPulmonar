@@ -11,9 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const resistencia = parseFloat(document.getElementById('resistencia').value);
     const frecuencia = parseFloat(document.getElementById('frecuencia').value);
     const vt = parseFloat(document.getElementById('vt').value) / 1000; // mL → L
-    const duracion = 10; // segundos (puedes hacerlo ajustable después)
+    // const duracion = 10; // segundos (puedes hacerlo ajustable después)
+    const duracion = parseFloat(document.getElementById('duracion').value);
 
     // Construir URL con parámetros
+    // const url = `/simular?compliance=${compliance}&resistencia=${resistencia}&frecuencia=${frecuencia}&vt=${vt}&duracion=${duracion}`;
     const url = `/simular?compliance=${compliance}&resistencia=${resistencia}&frecuencia=${frecuencia}&vt=${vt}&duracion=${duracion}`;
 
     try {
