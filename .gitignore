@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+venv/
+.env/
+.venv/
+
+# Archivos temporales
+*.log
+*.tmp
+*.swp
+
+# Archivos de configuración personales
+*.DS_Store
+.idea/
+.vscode/
+
+# Archivos generados
+*.png
+*.pdf
+*.zip
+
+# Datos exportados por ChatGPT
+*.ipynb
+sandbox/
+
+# Archivos de sistema
+Thumbs.db
