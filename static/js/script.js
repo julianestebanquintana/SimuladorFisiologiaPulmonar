@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let chart;
   let datosSimulados = null;
   let pausaActiva = false;
+  let datasetsActivos = []; // Guardamos referencia a los datasets
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -33,35 +34,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const labels = data.time;
 
+      // Preparar datasets
+      datasetsActivos = [
+        {
+          label: 'Volumen (L)',
+          data: data.volume,
+          borderColor: 'blue',
+          yAxisID: 'y',
+          tension: 0.3,
+          hidden: !document.getElementById('toggle-volumen').checked
+        },
+        {
+          label: 'Presión (cmH₂O)',
+          data: data.pressure,
+          borderColor: 'red',
+          yAxisID: 'y1',
+          tension: 0.3,
+          hidden: !document.getElementById('toggle-presion').checked
+        },
+        {
+          label: 'Flujo (L/s)',
+          data: data.flow,
+          borderColor: 'green',
+          yAxisID: 'y2',
+          tension: 0.3,
+          hidden: !document.getElementById('toggle-flujo').checked
+        }
+      ];
+
+      // Destruir gráfico anterior si existe
       if (chart) chart.destroy();
 
+      // Crear nuevo gráfico
       chart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: labels,
-          datasets: [
-            {
-              label: 'Volumen (L)',
-              data: data.volume,
-              borderColor: 'blue',
-              yAxisID: 'y',
-              tension: 0.3
-            },
-            {
-              label: 'Presión (cmH₂O)',
-              data: data.pressure,
-              borderColor: 'red',
-              yAxisID: 'y1',
-              tension: 0.3
-            },
-            {
-              label: 'Flujo (L/s)',
-              data: data.flow,
-              borderColor: 'green',
-              yAxisID: 'y2',
-              tension: 0.3
-            }
-          ]
+          datasets: datasetsActivos
         },
         options: {
           responsive: true,
@@ -114,12 +123,14 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       });
+
     } catch (error) {
       console.error('Error en la simulación:', error);
       alert('Ocurrió un error al obtener la simulación.');
     }
   });
 
+  // Botón Descargar CSV
   botonCSV.addEventListener('click', () => {
     if (!datosSimulados) {
       alert('Primero debes realizar una simulación.');
@@ -144,10 +155,22 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(url);
   });
 
+  // Botón Pausar/Reanudar
   botonPausa.addEventListener('click', () => {
     pausaActiva = !pausaActiva;
     botonPausa.textContent = pausaActiva ? 'Reanudar' : 'Pausar';
   });
 
+  // Checkboxes para mostrar/ocultar curvas
+  ['toggle-volumen', 'toggle-presion', 'toggle-flujo'].forEach((id, index) => {
+    document.getElementById(id).addEventListener('change', (e) => {
+      if (chart) {
+        chart.data.datasets[index].hidden = !e.target.checked;
+        chart.update();
+      }
+    });
+  });
+
+  // Simulación inicial automática
   form.dispatchEvent(new Event('submit'));
 });
