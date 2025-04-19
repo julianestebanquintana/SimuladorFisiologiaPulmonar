@@ -2,34 +2,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('simulador-form');
   const ctx = document.getElementById('grafica').getContext('2d');
   const botonCSV = document.getElementById('descargarCSV');
+  const botonPausa = document.getElementById('pausar');
+
   let chart;
-  let datosSimulados = null; // Guardamos los datos de simulación
+  let datosSimulados = null;
+  let pausaActiva = false;
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    if (pausaActiva) {
+      alert('La simulación está pausada. Reanuda para volver a simular.');
+      return;
+    }
+
     // Obtener valores del formulario
-    const compliance = parseFloat(document.getElementById('compliance').value) / 1000; // mL/cmH2O → L/cmH2O
+    const compliance = parseFloat(document.getElementById('compliance').value) / 1000;
     const resistencia = parseFloat(document.getElementById('resistencia').value);
     const frecuencia = parseFloat(document.getElementById('frecuencia').value);
-    const vt = parseFloat(document.getElementById('vt').value) / 1000; // mL → L
+    const vt = parseFloat(document.getElementById('vt').value) / 1000;
     const duracion = parseFloat(document.getElementById('duracion').value);
 
-    // Construir URL con parámetros
     const url = `/simular?compliance=${compliance}&resistencia=${resistencia}&frecuencia=${frecuencia}&vt=${vt}&duracion=${duracion}`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
 
-      datosSimulados = data; // Guardamos los datos para descarga
+      datosSimulados = data;
 
       const labels = data.time;
 
-      // Destruir el gráfico anterior si ya existe
       if (chart) chart.destroy();
 
-      // Crear nuevo gráfico con múltiples curvas
       chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -115,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Botón para descargar CSV
   botonCSV.addEventListener('click', () => {
     if (!datosSimulados) {
       alert('Primero debes realizar una simulación.');
@@ -140,6 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(url);
   });
 
-  // Lanzar una simulación inicial al cargar la página
+  botonPausa.addEventListener('click', () => {
+    pausaActiva = !pausaActiva;
+    botonPausa.textContent = pausaActiva ? 'Reanudar' : 'Pausar';
+  });
+
   form.dispatchEvent(new Event('submit'));
 });
