@@ -1,41 +1,65 @@
+
 document.addEventListener('DOMContentLoaded', function () {
-    const entrada = document.getElementById('entrada');
-    const durFreqInput = document.getElementById('dur_freq');
-    const durFreqLabel = durFreqInput.closest('.col-md-3').querySelector('label');
-
-    function actualizarEtiqueta() {
-        if (entrada.value === 'pulso') {
-            durFreqLabel.textContent = 'Duración del pulso (s)';
-        } else if (entrada.value === 'seno') {
-            durFreqLabel.textContent = 'Frecuencia (Hz)';
-        } else {
-            durFreqLabel.textContent = 'Duración / Frecuencia';
+    const ctx = document.getElementById('grafica').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Volumen pulmonar (mL)',
+                data: [],
+                fill: false,
+                borderColor: 'rgb(0, 123, 255)',
+                tension: 0.2
+            }]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: 'Tiempo (s)' } },
+                y: { title: { display: true, text: 'Volumen (mL)' } }
+            }
         }
-    }
+    });
 
-    entrada.addEventListener('change', actualizarEtiqueta);
-    actualizarEtiqueta();
+    let intervalo;
 
     document.getElementById('simulador-form').addEventListener('submit', function (event) {
         event.preventDefault();
+        clearInterval(intervalo);
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+        chart.update();
 
-        const datos = {
-            modelo: document.getElementById('modelo').value,
-            entrada: document.getElementById('entrada').value,
-            R: parseFloat(document.getElementById('R').value),
-            C: parseFloat(document.getElementById('C').value),
-            amp: parseFloat(document.getElementById('amp').value),
-            dur_freq: parseFloat(document.getElementById('dur_freq').value)
+        const parametros = {
+            compliance: parseFloat(document.getElementById('compliance').value),
+            resistencia: parseFloat(document.getElementById('resistencia').value),
+            frecuencia: parseFloat(document.getElementById('frecuencia').value),
+            fio2: parseFloat(document.getElementById('fio2').value),
+            peep: parseFloat(document.getElementById('peep').value),
+            vt: parseFloat(document.getElementById('vt').value)
         };
 
-        fetch('/simular', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datos)
-        })
-        .then(res => res.blob())
-        .then(blob => {
-            document.getElementById('grafica').src = URL.createObjectURL(blob);
-        });
+        let tiempo = 0;
+        const dt = 0.1;
+        intervalo = setInterval(() => {
+            fetch('/simular', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...parametros, tiempo })
+            })
+            .then(res => res.json())
+            .then(data => {
+                chart.data.labels.push(data.tiempo.toFixed(1));
+                chart.data.datasets[0].data.push(data.volumen);
+                chart.update();
+                tiempo += dt;
+                if (chart.data.labels.length > 100) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                }
+            });
+        }, dt * 1000);
     });
 });
