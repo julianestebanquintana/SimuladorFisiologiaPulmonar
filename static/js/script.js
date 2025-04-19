@@ -1,65 +1,116 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('simulador-form');
+  const ctx = document.getElementById('grafica').getContext('2d');
+  let chart;
 
-document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('grafica').getContext('2d');
-    const chart = new Chart(ctx, {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    // Obtener valores del formulario
+    const compliance = parseFloat(document.getElementById('compliance').value) / 1000; // mL/cmH2O → L/cmH2O
+    const resistencia = parseFloat(document.getElementById('resistencia').value);
+    const frecuencia = parseFloat(document.getElementById('frecuencia').value);
+    const vt = parseFloat(document.getElementById('vt').value) / 1000; // mL → L
+    const duracion = 10; // segundos (puedes hacerlo ajustable después)
+
+    // Construir URL con parámetros
+    const url = `/simular?compliance=${compliance}&resistencia=${resistencia}&frecuencia=${frecuencia}&vt=${vt}&duracion=${duracion}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const labels = data.time;
+
+      // Destruir el gráfico anterior si ya existe
+      if (chart) chart.destroy();
+
+      // Crear nuevo gráfico con múltiples curvas
+      chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [],
-            datasets: [{
-                label: 'Volumen pulmonar (mL)',
-                data: [],
-                fill: false,
-                borderColor: 'rgb(0, 123, 255)',
-                tension: 0.2
-            }]
+          labels: labels,
+          datasets: [
+            {
+              label: 'Volumen (L)',
+              data: data.volume,
+              borderColor: 'blue',
+              yAxisID: 'y',
+              tension: 0.3
+            },
+            {
+              label: 'Presión (cmH₂O)',
+              data: data.pressure,
+              borderColor: 'red',
+              yAxisID: 'y1',
+              tension: 0.3
+            },
+            {
+              label: 'Flujo (L/s)',
+              data: data.flow,
+              borderColor: 'green',
+              yAxisID: 'y2',
+              tension: 0.3
+            }
+          ]
         },
         options: {
-            animation: false,
-            responsive: true,
-            scales: {
-                x: { title: { display: true, text: 'Tiempo (s)' } },
-                y: { title: { display: true, text: 'Volumen (mL)' } }
+          responsive: true,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          stacked: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Simulación respiratoria: Volumen, Presión y Flujo'
+            },
+            legend: {
+              position: 'bottom'
             }
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Volumen (L)'
+              }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Presión (cmH₂O)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            },
+            y2: {
+              type: 'linear',
+              position: 'right',
+              offset: true,
+              title: {
+                display: true,
+                text: 'Flujo (L/s)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+          }
         }
-    });
+      });
+    } catch (error) {
+      console.error('Error en la simulación:', error);
+      alert('Ocurrió un error al obtener la simulación.');
+    }
+  });
 
-    let intervalo;
-
-    document.getElementById('simulador-form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        clearInterval(intervalo);
-        chart.data.labels = [];
-        chart.data.datasets[0].data = [];
-        chart.update();
-
-        const parametros = {
-            compliance: parseFloat(document.getElementById('compliance').value),
-            resistencia: parseFloat(document.getElementById('resistencia').value),
-            frecuencia: parseFloat(document.getElementById('frecuencia').value),
-            fio2: parseFloat(document.getElementById('fio2').value),
-            peep: parseFloat(document.getElementById('peep').value),
-            vt: parseFloat(document.getElementById('vt').value)
-        };
-
-        let tiempo = 0;
-        const dt = 0.1;
-        intervalo = setInterval(() => {
-            fetch('/simular', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...parametros, tiempo })
-            })
-            .then(res => res.json())
-            .then(data => {
-                chart.data.labels.push(data.tiempo.toFixed(1));
-                chart.data.datasets[0].data.push(data.volumen);
-                chart.update();
-                tiempo += dt;
-                if (chart.data.labels.length > 100) {
-                    chart.data.labels.shift();
-                    chart.data.datasets[0].data.shift();
-                }
-            });
-        }, dt * 1000);
-    });
+  // Lanzar una simulación inicial al cargar la página
+  form.dispatchEvent(new Event('submit'));
 });
